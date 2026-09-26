@@ -12,6 +12,9 @@ apps/
   portal/     Patient Portal application surface (placeholder, isolated from staff)
 packages/
   shared/     Frontend contracts shared by apps/* (depends on nothing under apps/)
+    src/i18n/   T-008 — ar/en foundation: Locale/Direction types, dir/lang
+                application on <html>, and the client-side "translate a
+                server-sent error code" mechanism (Technical Plan §6.4).
 backend/
   SmartClinic.sln
   src/
@@ -21,6 +24,7 @@ backend/
     SmartClinic.Api/              -> Application
 scripts/
   check-boundaries.mjs   frontend boundary enforcement (no Portal -> Staff imports)
+  check-rtl-ltr.mjs      T-008 — fails on hard-coded left/right (Backlog TR-14)
 ```
 
 ## Verifying the boundaries
@@ -38,6 +42,12 @@ compiler's own `outFile` mode as a bundler; no Vite/webpack/esbuild needed):
 cd apps/portal
 npx tsc -p tsconfig.build.json
 grep -i "staff" dist/portal.bundle.js   # must find nothing
+```
+
+Frontend, T-008 hard-coded left/right rule (no install required, plain Node):
+
+```
+node scripts/check-rtl-ltr.mjs
 ```
 
 Backend:

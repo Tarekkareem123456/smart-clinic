@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "description": "Smart Clinic monorepo root (T-001 foundation skeleton).",
   "scripts": {
-    "check:boundaries": "node scripts/check-boundaries.mjs"
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check:rtl-ltr": "node scripts/check-rtl-ltr.mjs",
+    "check": "npm run check:boundaries && npm run check:rtl-ltr"
   }
 }
