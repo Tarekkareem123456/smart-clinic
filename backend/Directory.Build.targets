@@ -1,0 +1,31 @@
+<Project>
+
+  <!--
+    T-001 / AC-3 — closes the one gap left by plain project-reference
+    circular-dependency detection: nothing currently depends on
+    SmartClinic.Api (it is the outermost/host project), so an errant
+    Infrastructure -> Api reference would NOT automatically create an
+    MSBuild circular reference and would otherwise go undetected.
+
+    This target explicitly checks, for the Infrastructure project only,
+    whether any of its <ProjectReference> items point at SmartClinic.Api,
+    and fails the build with a clear error if so. It is auto-imported by
+    every project under backend/ via MSBuild's standard
+    "Directory.Build.targets" convention, so no existing .csproj/.sln file
+    needed to change. No external tool, package, or framework is used —
+    only built-in MSBuild items/conditions, consistent with the approved
+    .NET / Clean Architecture stack.
+  -->
+  <Target Name="EnforceInfrastructureMustNotReferenceApi" BeforeTargets="Build;Rebuild;Restore">
+    <ItemGroup>
+      <_ForbiddenInfrastructureToApiRef
+          Include="@(ProjectReference)"
+          Condition="'$(MSBuildProjectName)' == 'SmartClinic.Infrastructure' AND '%(ProjectReference.Filename)' == 'SmartClinic.Api'" />
+    </ItemGroup>
+
+    <Error
+        Condition="'@(_ForbiddenInfrastructureToApiRef)' != ''"
+        Text="Architecture violation: SmartClinic.Infrastructure must not reference SmartClinic.Api (Infrastructure -> Api is forbidden by the Clean Architecture boundary; Api is the outermost/composition layer). Forbidden ProjectReference: @(_ForbiddenInfrastructureToApiRef)" />
+  </Target>
+
+</Project>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      APPLICATION LAYER — may depend on Domain only.
+      Must never reference Infrastructure or Api. Infrastructure already
+      references this project (to implement Application-defined
+      interfaces), so Application -> Infrastructure would be an MSBuild
+      circular reference and fail the build. Api already references this
+      project, so Application -> Api would likewise be circular.
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartClinic.Domain\SmartClinic.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- No business/domain/application model files are added in T-001 (AC-6). -->
+  </ItemGroup>
+
+</Project>

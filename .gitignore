@@ -1,0 +1,14 @@
+# Node
+node_modules/
+dist/
+build/
+
+# .NET
+bin/
+obj/
+*.user
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

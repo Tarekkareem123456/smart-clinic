@@ -1,0 +1,9 @@
+{
+  "name": "smart-clinic",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Smart Clinic monorepo root (T-001 foundation skeleton).",
+  "scripts": {
+    "check:boundaries": "node scripts/check-boundaries.mjs"
+  }
+}

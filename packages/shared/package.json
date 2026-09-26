@@ -1,0 +1,10 @@
+{
+  "name": "@smart-clinic/shared",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Smart Clinic — shared frontend contracts/utilities consumed by apps/staff and apps/portal. Must not depend on either app.",
+  "main": "src/index.ts",
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!--
+      net8.0 (LTS) is used as a placeholder target framework for this
+      foundation skeleton. The exact .NET version was not specified as a
+      locked decision in the Backend Stack Final Summary or Technical Plan
+      (only the "C# / .NET / ASP.NET Core" family is locked). This value is
+      an implementation detail, not an architectural decision, and can be
+      bumped later (e.g. to a newer LTS) without affecting layer boundaries.
+    -->
+  </PropertyGroup>
+</Project>

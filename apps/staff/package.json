@@ -1,0 +1,12 @@
+{
+  "name": "@smart-clinic/staff",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Smart Clinic — Staff application surface (foundation skeleton, no functionality yet).",
+  "dependencies": {
+    "@smart-clinic/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

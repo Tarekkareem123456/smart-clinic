@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      INFRASTRUCTURE LAYER — implements interfaces defined by the inner
+      layers (Domain, Application). Depends on both of them. Must never
+      reference Api: Api does not (currently) reference Infrastructure in
+      this skeleton, so that specific misuse is not caught by circular
+      reference detection alone — see T-001 report, AC-3, "known limitation".
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartClinic.Domain\SmartClinic.Domain.csproj" />
+    <ProjectReference Include="..\SmartClinic.Application\SmartClinic.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- No persistence/EF Core/Dapper wiring is added in T-001 - foundation only. -->
+  </ItemGroup>
+
+</Project>

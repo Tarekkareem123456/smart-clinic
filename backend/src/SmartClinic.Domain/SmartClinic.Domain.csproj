@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      DOMAIN LAYER — must depend on nothing.
+      No ProjectReference elements are allowed in this file.
+      Adding a ProjectReference here to Application, Infrastructure or Api
+      is forbidden by the architecture and will be caught automatically:
+      each of those projects already (transitively) references this one,
+      so any reverse reference creates an MSBuild circular project
+      reference, which fails the build/restore. See T-001 report, AC-3.
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- No business/domain model files are added in T-001 (AC-6). -->
+  </ItemGroup>
+
+</Project>

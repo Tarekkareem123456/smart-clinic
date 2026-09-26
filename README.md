@@ -1,0 +1,57 @@
+# Smart Clinic — Repository Foundation (T-001)
+
+This is the initial repository/project structure only. No business or
+clinical functionality is implemented. See `T-001-report.md` for the full
+acceptance-criteria evidence.
+
+## Layout
+
+```
+apps/
+  staff/      Staff application surface (placeholder)
+  portal/     Patient Portal application surface (placeholder, isolated from staff)
+packages/
+  shared/     Frontend contracts shared by apps/* (depends on nothing under apps/)
+backend/
+  SmartClinic.sln
+  src/
+    SmartClinic.Domain/           no project references (depends on nothing)
+    SmartClinic.Application/      -> Domain
+    SmartClinic.Infrastructure/   -> Domain, Application
+    SmartClinic.Api/              -> Application
+scripts/
+  check-boundaries.mjs   frontend boundary enforcement (no Portal -> Staff imports)
+```
+
+## Verifying the boundaries
+
+Frontend, source-level check (no install required, plain Node):
+
+```
+node scripts/check-boundaries.mjs
+```
+
+Frontend, real build/bundle (no install required — uses the TypeScript
+compiler's own `outFile` mode as a bundler; no Vite/webpack/esbuild needed):
+
+```
+cd apps/portal
+npx tsc -p tsconfig.build.json
+grep -i "staff" dist/portal.bundle.js   # must find nothing
+```
+
+Backend:
+
+```
+cd backend
+dotnet build
+```
+
+Domain-depends-on-nothing and most other layer-direction rules are enforced
+by the project reference graph itself: any forbidden reverse reference
+(e.g. Domain -> Application) creates an MSBuild circular project reference
+and fails `dotnet build`/`dotnet restore`. The one gap that plain circular-
+reference detection cannot catch — `Infrastructure -> Api` — is closed
+explicitly by `backend/Directory.Build.targets`, a pure-MSBuild target that
+fails the build if that specific reference is ever added. Details and exact
+verification commands are in the T-001 report / AC-3+AC-5 addendum.

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!--
+      API LAYER — the ASP.NET Core host / composition root.
+      Per T-001 AC-2 minimum list, this project references Application
+      only. It does NOT reference Infrastructure in this foundation
+      skeleton, because there is no dependency injection to wire yet
+      (no controllers, no services). See T-001 report, "open item":
+      when a later task introduces real DI wiring, this project will need
+      to decide how Infrastructure implementations are registered
+      (e.g. a direct reference here, or a separate composition project).
+      That decision is explicitly deferred, not made here.
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartClinic.Application\SmartClinic.Application.csproj" />
+  </ItemGroup>
+
+</Project>
