@@ -1,0 +1,36 @@
+-- T-003 — prepared for T-103 (Audit Write Path). NOT applied to anything
+-- in T-003 itself, because the table it targets does not exist yet.
+--
+-- Architecture §14 (Constraints): "AuditLogEntry rows are insert-only at
+-- the database permission level (no UPDATE/DELETE grant to the
+-- application's normal runtime role) as a second layer under the
+-- domain-level append-only rule (P5/P2)."
+--
+-- 003_default_privileges.sql gives app_runtime standard CRUD (SELECT,
+-- INSERT, UPDATE, DELETE) as the *default* for every future table, because
+-- that's correct for ordinary business tables. Postgres default
+-- privileges cannot single out one specific future table name in advance
+-- (there is no such table to name yet) — so the Audit table's stricter
+-- rule cannot be expressed until that table exists.
+--
+-- USAGE: whichever task creates the real Audit table (T-103 in the
+-- current Backlog) must run this immediately after that CREATE TABLE,
+-- with <<AUDIT_TABLE_NAME>> replaced by the real table name (Architecture
+-- §12/§14 discusses the entity as `AuditLogEntry`; the physical table name
+-- — snake_case, pluralized, etc. — is exactly the "later database-design
+-- phase" detail Architecture explicitly defers, so it is NOT invented
+-- here):
+--
+--   REVOKE UPDATE, DELETE ON <<AUDIT_TABLE_NAME>> FROM app_runtime;
+--
+-- app_runtime keeps SELECT (Audit is readable, e.g. for the Staff App
+-- Audit Log screen, permission-gated at the application layer) and INSERT
+-- (AppendAuditEntry, T-103) from the 003_default_privileges.sql baseline;
+-- only UPDATE/DELETE are removed, matching "insert-only."
+--
+-- T-003's own verify script (../verify/verify_t003.sql) proves this exact
+-- REVOKE mechanism works correctly against a disposable probe table, so
+-- that when T-103 runs the one-liner above for real, it is applying an
+-- already-tested pattern rather than an unverified one.
+
+REVOKE UPDATE, DELETE ON <<AUDIT_TABLE_NAME>> FROM app_runtime;

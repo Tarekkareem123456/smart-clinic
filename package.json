@@ -6,6 +6,7 @@
   "scripts": {
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:rtl-ltr": "node scripts/check-rtl-ltr.mjs",
-    "check": "npm run check:boundaries && npm run check:rtl-ltr"
+    "check:sql-structure": "node scripts/check-sql-structure.mjs",
+    "check": "npm run check:boundaries && npm run check:rtl-ltr && npm run check:sql-structure"
   }
 }
