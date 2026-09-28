@@ -16,7 +16,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- No persistence/EF Core/Dapper wiring is added in T-001 - foundation only. -->
+    <!--
+      T-004: EF Core (Backend Stack Q7/Q8, Locked) with the PostgreSQL
+      provider (Q6, Locked). Needed for the DbContext and the versioned
+      migrations mechanism. Pinned to an exact version for reproducibility.
+      No entities/business models are defined (T-004 adds mechanism only).
+      Dapper is NOT added here: it belongs to the reporting tasks.
+    -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
   </ItemGroup>
 
 </Project>

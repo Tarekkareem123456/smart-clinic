@@ -22,14 +22,19 @@ backend/
     SmartClinic.Application/      -> Domain
     SmartClinic.Infrastructure/   -> Domain, Application
     SmartClinic.Api/              -> Application
+    SmartClinic.Migrator/         -> Infrastructure (T-004: applies EF migrations from CI/CD)
+  tests/
+    SmartClinic.Migrations.Tests/ T-004: Testcontainers (PostgreSQL) integration tests
   database/                      T-003 — roles + baseline extensions
                                   (separate from the future EF Core
                                   Migrations pipeline, T-004). See
-                                  backend/database/README.md.
+                                  backend/database/README.md and
+                                  backend/database/MIGRATIONS.md.
 scripts/
   check-boundaries.mjs    frontend boundary enforcement (no Portal -> Staff imports)
   check-rtl-ltr.mjs       T-008 — fails on hard-coded left/right (Backlog TR-14)
   check-sql-structure.mjs T-003 — basic structural sanity check on the new .sql files
+  check-migration-guards.mjs T-004 — controlled-migrations guards
 ```
 
 ## Verifying the boundaries

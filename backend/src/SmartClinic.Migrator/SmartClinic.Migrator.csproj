@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      T-004 — MIGRATOR: the executable CI/CD runs to apply EF Core
+      migrations, and the startup project for the EF design-time tools
+      (`dotnet ef` requires an executable startup project). It is an
+      outermost host like Api: it references Infrastructure only, and
+      nothing references it. It does not add or change any layer rule.
+    -->
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Required by `dotnet ef` for the startup project. Design-time only:
+      PrivateAssets=all keeps it out of anything that references this
+      project. Version must match .config/dotnet-tools.json (dotnet-ef);
+      scripts/check-migration-guards.mjs enforces that.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartClinic.Infrastructure\SmartClinic.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

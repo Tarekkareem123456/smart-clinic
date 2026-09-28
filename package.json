@@ -7,6 +7,11 @@
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:rtl-ltr": "node scripts/check-rtl-ltr.mjs",
     "check:sql-structure": "node scripts/check-sql-structure.mjs",
-    "check": "npm run check:boundaries && npm run check:rtl-ltr && npm run check:sql-structure"
+    "check": "npm run check:boundaries && npm run check:rtl-ltr && npm run check:sql-structure && npm run check:migrations",
+    "check:migrations": "node scripts/check-migration-guards.mjs",
+    "verify:backend": "dotnet build backend/SmartClinic.sln -c Release && dotnet test backend/SmartClinic.sln -c Release --no-build",
+    "ci": "npm run check && npm run verify:backend",
+    "migrations:add": "dotnet ef migrations add --project backend/src/SmartClinic.Infrastructure --startup-project backend/src/SmartClinic.Migrator --output-dir Persistence/Migrations",
+    "migrations:script": "dotnet ef migrations script --idempotent --project backend/src/SmartClinic.Infrastructure --startup-project backend/src/SmartClinic.Migrator"
   }
 }
