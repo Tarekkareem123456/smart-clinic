@@ -7,11 +7,22 @@
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:rtl-ltr": "node scripts/check-rtl-ltr.mjs",
     "check:sql-structure": "node scripts/check-sql-structure.mjs",
-    "check": "npm run check:boundaries && npm run check:rtl-ltr && npm run check:sql-structure && npm run check:migrations",
+    "check": "npm run check:boundaries && npm run check:rtl-ltr && npm run check:sql-structure && npm run check:migrations && npm run check:client-usage && npm run check:openapi-tooling",
     "check:migrations": "node scripts/check-migration-guards.mjs",
     "verify:backend": "dotnet build backend/SmartClinic.sln -c Release && dotnet test backend/SmartClinic.sln -c Release --no-build",
     "ci": "npm run check && npm run verify:backend",
     "migrations:add": "dotnet ef migrations add --project backend/src/SmartClinic.Infrastructure --startup-project backend/src/SmartClinic.Migrator --output-dir Persistence/Migrations",
-    "migrations:script": "dotnet ef migrations script --idempotent --project backend/src/SmartClinic.Infrastructure --startup-project backend/src/SmartClinic.Migrator"
+    "migrations:script": "dotnet ef migrations script --idempotent --project backend/src/SmartClinic.Infrastructure --startup-project backend/src/SmartClinic.Migrator",
+    "check:client-usage": "node scripts/check-client-usage.mjs",
+    "check:openapi-tooling": "node scripts/check-openapi-tooling.mjs",
+    "openapi:generate:staff": "dotnet swagger tofile --output artifacts/openapi/staff.json backend/src/SmartClinic.Api/bin/Release/net8.0/SmartClinic.Api.dll staff",
+    "openapi:generate:portal": "dotnet swagger tofile --output artifacts/openapi/portal.json backend/src/SmartClinic.Api/bin/Release/net8.0/SmartClinic.Api.dll portal",
+    "openapi:generate": "npm run openapi:generate:staff && npm run openapi:generate:portal",
+    "generate:clients:staff": "openapi-typescript artifacts/openapi/staff.json -o apps/staff/src/generated/staff-client.ts",
+    "generate:clients:portal": "openapi-typescript artifacts/openapi/portal.json -o apps/portal/src/generated/portal-client.ts",
+    "generate:clients": "npm run generate:clients:staff && npm run generate:clients:portal"
+  },
+  "devDependencies": {
+    "openapi-typescript": "6.7.6"
   }
 }

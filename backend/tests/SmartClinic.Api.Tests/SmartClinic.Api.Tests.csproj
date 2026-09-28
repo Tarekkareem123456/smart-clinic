@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      T-005 — tests for the OpenAPI staff/portal separation mechanism.
+      Pure in-process ASP.NET Core hosting (no Docker, no real HTTP
+      server needed) — unlike T-004's Testcontainers tests, these can run
+      wherever the .NET SDK runs.
+    -->
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <!--
+      Same version as SmartClinic.Api's reference; kept in sync by
+      scripts/check-openapi-tooling.mjs. Needed directly here (not just
+      transitively) for ISwaggerProvider / SwaggerGenOptions in the tests.
+    -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SmartClinic.Api\SmartClinic.Api.csproj" />
+  </ItemGroup>
+
+</Project>

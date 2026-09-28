@@ -15,6 +15,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!--
+      T-005: Swashbuckle generates the two separate OpenAPI documents
+      (staff/portal). Candidate named in Technical Plan for the .NET
+      family ("Swashbuckle / NSwag"); Swashbuckle picked as the smaller of
+      the two, per the "smallest compatible choice" instruction. Pinned
+      exactly; scripts/check-openapi-tooling.mjs keeps the test project
+      and the CLI tool manifest in sync with this version.
+    -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SmartClinic.Application\SmartClinic.Application.csproj" />
   </ItemGroup>
 

@@ -9,7 +9,11 @@ acceptance-criteria evidence.
 ```
 apps/
   staff/      Staff application surface (placeholder)
+    src/generated/  T-005 — OpenAPI-generated Staff client (placeholder; see backend/src/SmartClinic.Api/OpenApi/README.md)
+    src/services/   T-005 — only place allowed to import src/generated/* (TR-11)
   portal/     Patient Portal application surface (placeholder, isolated from staff)
+    src/generated/  T-005 — OpenAPI-generated Portal client (placeholder)
+    src/services/   T-005 — only place allowed to import src/generated/* (TR-11)
 packages/
   shared/     Frontend contracts shared by apps/* (depends on nothing under apps/)
     src/i18n/   T-008 — ar/en foundation: Locale/Direction types, dir/lang
@@ -23,8 +27,11 @@ backend/
     SmartClinic.Infrastructure/   -> Domain, Application
     SmartClinic.Api/              -> Application
     SmartClinic.Migrator/         -> Infrastructure (T-004: applies EF migrations from CI/CD)
+    SmartClinic.Api/OpenApi/      T-005: staff/portal OpenAPI document separation (see its README.md)
+    SmartClinic.Api/Endpoints/    T-005: non-business pipeline-probe endpoints only
   tests/
     SmartClinic.Migrations.Tests/ T-004: Testcontainers (PostgreSQL) integration tests
+    SmartClinic.Api.Tests/        T-005: in-process OpenAPI separation tests (no Docker needed)
   database/                      T-003 — roles + baseline extensions
                                   (separate from the future EF Core
                                   Migrations pipeline, T-004). See
@@ -35,6 +42,8 @@ scripts/
   check-rtl-ltr.mjs       T-008 — fails on hard-coded left/right (Backlog TR-14)
   check-sql-structure.mjs T-003 — basic structural sanity check on the new .sql files
   check-migration-guards.mjs T-004 — controlled-migrations guards
+  check-client-usage.mjs T-005 — TR-11: generated clients used only from services/*
+  check-openapi-tooling.mjs T-005 — keeps Swashbuckle versions in sync
 ```
 
 ## Verifying the boundaries
@@ -65,6 +74,18 @@ Backend:
 ```
 cd backend
 dotnet build
+```
+
+OpenAPI / typed clients (T-005 — requires the .NET SDK and, for real
+client generation, network access to npm; see
+backend/src/SmartClinic.Api/OpenApi/README.md):
+
+```
+node scripts/check-client-usage.mjs
+node scripts/check-openapi-tooling.mjs
+dotnet build backend/SmartClinic.sln -c Release
+dotnet test  backend/SmartClinic.sln -c Release --filter FullyQualifiedName~SmartClinic.Api.Tests
+npm run openapi:generate && npm run generate:clients
 ```
 
 Database (T-003 — requires a real PostgreSQL instance, not available in
