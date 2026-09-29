@@ -3,9 +3,10 @@
   <PropertyGroup>
     <!--
       T-005 — tests for the OpenAPI staff/portal separation mechanism.
-      Pure in-process ASP.NET Core hosting (no Docker, no real HTTP
-      server needed) — unlike T-004's Testcontainers tests, these can run
-      wherever the .NET SDK runs.
+      T-006 — tests for the centralized error envelope/handling.
+      Pure in-process ASP.NET Core hosting (no Docker needed) — unlike
+      T-004's Testcontainers tests, these can run wherever the .NET SDK
+      runs.
     -->
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -21,6 +22,15 @@
       transitively) for ISwaggerProvider / SwaggerGenOptions in the tests.
     -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <!--
+      T-006 — needed to send REAL in-process HTTP requests (to actually
+      exercise GlobalExceptionHandler/UseStatusCodePages end to end) without
+      binding a real socket/port. Pinned to the net8.0 shared-framework
+      version already used everywhere else in this repo (T-004's EF/Npgsql,
+      T-001's TargetFramework). Standard, minimal companion package for
+      exactly this — not a new/broader testing framework.
+    -->
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.10" />
   </ItemGroup>
 
   <ItemGroup>

@@ -28,10 +28,11 @@ backend/
     SmartClinic.Api/              -> Application
     SmartClinic.Migrator/         -> Infrastructure (T-004: applies EF migrations from CI/CD)
     SmartClinic.Api/OpenApi/      T-005: staff/portal OpenAPI document separation (see its README.md)
-    SmartClinic.Api/Endpoints/    T-005: non-business pipeline-probe endpoints only
+    SmartClinic.Api/Endpoints/    T-005/T-006: non-business pipeline-probe endpoints only
+    SmartClinic.Api/Errors/       T-006: error envelope + centralized handling (see its README.md)
   tests/
     SmartClinic.Migrations.Tests/ T-004: Testcontainers (PostgreSQL) integration tests
-    SmartClinic.Api.Tests/        T-005: in-process OpenAPI separation tests (no Docker needed)
+    SmartClinic.Api.Tests/        T-005/T-006: in-process OpenAPI + error-envelope tests (no Docker needed)
   database/                      T-003 — roles + baseline extensions
                                   (separate from the future EF Core
                                   Migrations pipeline, T-004). See
