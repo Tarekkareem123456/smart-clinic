@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics;
+using SmartClinic.Api.Logging;
 using SmartClinic.Application.Errors;
 
 namespace SmartClinic.Api.Errors;
@@ -48,10 +49,12 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             // client only ever sees `defaultMessage` from the catalog. This
             // holds even if a caller passed unsafe/internal text into an
             // AppException's constructor by mistake.
+            // T-007: the exception is logged through LogRedactor so credential-like
+            // text in its message never reaches a log (type + stack are kept).
             _logger.LogWarning(
-                exception,
+                LogRedactor.ToSafeException(exception),
                 "Handled application error. CorrelationId={CorrelationId} Code={Code} ResponseCode={ResponseCode} Status={Status}",
-                correlationId, appException.Code, responseCode, (int)status);
+                correlationId, LogRedactor.RedactText(appException.Code), responseCode, (int)status);
 
             await ErrorEnvelopeWriter.WriteAsync(
                 httpContext, status, responseCode, defaultMessage, responseFields, cancellationToken);
@@ -61,8 +64,9 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         // Unknown/unhandled exception: log the full detail server-side ONLY.
         // The client response below never includes exception.Message,
         // exception.GetType().Name, or exception.StackTrace.
+        // T-007: logged through LogRedactor (type + stack kept, secrets in the message redacted).
         _logger.LogError(
-            exception,
+            LogRedactor.ToSafeException(exception),
             "Unhandled exception. CorrelationId={CorrelationId}",
             correlationId);
 

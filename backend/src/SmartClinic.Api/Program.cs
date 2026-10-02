@@ -4,9 +4,12 @@
 // business functionality.
 using SmartClinic.Api.Endpoints;
 using SmartClinic.Api.Errors;
+using SmartClinic.Api.Logging;
 using SmartClinic.Api.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.AddSmartClinicLogging();
 
 builder.Services.AddSmartClinicOpenApi();
 
@@ -20,6 +23,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 var app = builder.Build();
 
 // Must be one of the first middlewares so it wraps everything downstream.
+app.UseSmartClinicRequestLogging();
+
 app.UseExceptionHandler();
 
 // T-006: covers the other half of "every API error" — responses with an
