@@ -1,0 +1,3 @@
+# T-010 — keep host build output out of the image build context.
+**/bin/
+**/obj/

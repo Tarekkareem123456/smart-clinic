@@ -1,0 +1,19 @@
+# T-010 — gitleaks configuration. Extends the built-in default rules; nothing
+# is disabled globally.
+title = "Smart Clinic gitleaks configuration"
+
+[extend]
+useDefault = true
+
+# Narrow, evidence-based allowlist (T-010).
+# The two T-007 redaction tests deliberately use a fabricated JWT-shaped value
+# to prove the log redactor scrubs it. It is synthetic: header {"alg":"HS256"},
+# payload {"sub":"1234567890"} / {"sub":"secret"}, and the signature segment
+# decodes to the word "signature". Allowed ONLY when all three hold: rule
+# "jwt", one of these two test files, and that exact fake signature segment.
+[[allowlists]]
+description = "Synthetic JWT fixtures in the T-007 log-redaction tests"
+condition = "AND"
+targetRules = ["jwt"]
+paths = ['''backend/tests/SmartClinic\.Api\.Tests/(LogRedactorTests|RequestLoggingTests)\.cs''']
+regexes = ['''eyJhbGciOiJIUzI1NiJ9\.eyJ[A-Za-z0-9_-]+\.c2lnbmF0dXJl''']

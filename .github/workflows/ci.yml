@@ -1,0 +1,208 @@
+# T-010 — Baseline CI pipeline. See .github/CI.md for what each job covers,
+# the required-status-check setting, and the timing baseline.
+#
+# Every job calls the repository's existing commands (npm scripts, dotnet
+# solution/test projects); no new tooling is introduced except the two mandated
+# scanners (Trivy, gitleaks), installed as pinned, checksum-verified binaries.
+#
+# Implementation-time CI/tooling parameters chosen for T-010. They are NOT
+# specified by the Backlog, the Architecture or the Backend Stack summary, and
+# they are not Architecture Open Decisions:
+#   - Node 22
+#   - Trivy severity threshold HIGH,CRITICAL
+#   - Trivy is run WITHOUT --ignore-unfixed (findings with no available fix
+#     also count)
+# The .NET 8.0.x setting follows the existing repository target (net8.0 in
+# Directory.Build.props); it is not a newly locked architecture decision.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Scanner versions + SHA-256 of the Linux x64 release archives, taken from the
+  # publishers' own checksum files. Bump version and checksum together.
+  TRIVY_VERSION: "0.75.0"
+  TRIVY_SHA256: "c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f"
+  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  static-checks:
+    name: Static checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          # T-010 implementation-time choice; no Node version is specified by
+          # the Backlog or the project baseline.
+          node-version: 22
+      # Lint / static guards: boundaries (T-001), RTL/LTR rule (T-008, TR-14),
+      # SQL structure (T-003), migration guards (T-004), generated-client
+      # usage + OpenAPI tooling (T-005). Plain Node, no install needed.
+      - name: npm run check
+        run: npm run check
+      # Typecheck of packages/shared (typescript ^5, as declared in its
+      # package.json). apps/staff and apps/portal are NOT typechecked here:
+      # see "Blocked parts" in .github/CI.md.
+      - name: Typecheck packages/shared
+        run: npx --yes -p typescript@5 tsc -p packages/shared
+
+  backend-unit:
+    name: Backend build + unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.x
+      # Whole-solution Release build = the backend typecheck/build validation
+      # (also enforces the T-001 layer rule via Directory.Build.targets).
+      - name: Build solution
+        run: dotnet build backend/SmartClinic.sln -c Release
+      # In-process tests (T-005/T-006/T-007); no Docker needed.
+      - name: Unit tests (SmartClinic.Api.Tests)
+        run: dotnet test backend/tests/SmartClinic.Api.Tests -c Release --no-build
+
+  backend-integration:
+    name: Backend integration tests (Testcontainers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.x
+      # T-004 suite: disposable PostgreSQL Testcontainer, real T-003 SQL, real
+      # migrations. Needs a Docker daemon (present on ubuntu-latest); these
+      # tests fail rather than skip when Docker is missing.
+      - name: Integration tests (SmartClinic.Migrations.Tests)
+        run: dotnet test backend/tests/SmartClinic.Migrations.Tests -c Release
+
+  image-and-trivy:
+    name: Image build + Trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build API image
+        run: docker build -f backend/Dockerfile -t smartclinic-api:ci backend
+      - name: Install Trivy ${{ env.TRIVY_VERSION }} (checksum-verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o trivy.tgz "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "${TRIVY_SHA256}  trivy.tgz" | sha256sum -c -
+          sudo tar -xzf trivy.tgz -C /usr/local/bin trivy
+          trivy --version
+      # Mandatory scan (T-010 AC: Trivy is a mandatory pipeline step). The
+      # HIGH,CRITICAL threshold is a T-010 implementation-time choice, not a
+      # Backlog value. --ignore-unfixed is deliberately NOT used: the job fails
+      # on any HIGH/CRITICAL finding in the built image, fixed or not.
+      - name: Trivy — image
+        run: |
+          docker save smartclinic-api:ci -o smartclinic-api.tar
+          trivy image --input smartclinic-api.tar --severity HIGH,CRITICAL --exit-code 1 --no-progress
+      # Repository scan: dependency manifests/lockfiles and Dockerfile/IaC
+      # misconfiguration, same threshold and same unfixed-findings handling.
+      - name: Trivy — repository (vulnerabilities + misconfiguration)
+        run: trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --skip-dirs node_modules --no-progress .
+
+  secret-scan:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks ${{ env.GITLEAKS_VERSION }} (checksum-verified)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
+          sudo tar -xzf gitleaks.tgz -C /usr/local/bin gitleaks
+          gitleaks version
+      # Mandatory scan (T-010 AC): full git history, exits non-zero on any
+      # finding. Config: .gitleaks.toml (default rules + one narrow allowlist).
+      - name: gitleaks — full history
+        run: gitleaks git --redact --no-banner --verbose .
+
+  # Single required status check. Branch protection requires THIS job's name
+  # ("CI gate"); it fails unless every job above succeeded (skipped/cancelled
+  # count as failure), and it records per-job timings for the baseline.
+  ci-gate:
+    name: CI gate
+    if: ${{ always() }}
+    needs: [static-checks, backend-unit, backend-integration, image-and-trivy, secret-scan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Require every job to have succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          if echo "$NEEDS" | jq -e 'to_entries | all(.value.result == "success")' > /dev/null; then
+            echo "All required jobs succeeded."
+          else
+            echo "::error::One or more required jobs did not succeed."
+            exit 1
+          fi
+      # Timing baseline (T-010 AC): per-job and total wall-clock durations of
+      # this run, written to the run summary and uploaded as ci-timing.json.
+      - name: Record pipeline timing
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=100" \
+            --jq '[.jobs[] | select(.name != "CI gate" and .completed_at != null)
+                   | {name, conclusion, started_at, completed_at,
+                      seconds: ((.completed_at | fromdateiso8601) - (.started_at | fromdateiso8601))}]' \
+            > ci-timing-jobs.json
+          jq '{run_id: (env.GITHUB_RUN_ID | tonumber), sha: env.GITHUB_SHA, event: env.GITHUB_EVENT_NAME,
+               pipeline_seconds: (if length == 0 then null
+                                  else ((map(.completed_at | fromdateiso8601) | max) - (map(.started_at | fromdateiso8601) | min)) end),
+               jobs: .}' ci-timing-jobs.json > ci-timing.json
+          total="$(jq -r '.pipeline_seconds' ci-timing.json)"
+          {
+            echo "### Pipeline timing (seconds)"
+            echo ""
+            echo "| Job | Result | Seconds |"
+            echo "|---|---|---|"
+            jq -r '.jobs[] | "| \(.name) | \(.conclusion) | \(.seconds) |"' ci-timing.json
+            echo "| **Pipeline wall-clock (excl. gate)** | | **${total}** |"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() }}
+        with:
+          name: ci-timing
+          path: ci-timing.json
+          if-no-files-found: ignore

@@ -57,11 +57,14 @@ changed; this is done by the pipeline that creates that table.
 
 ## Required outside this repository (not implementable here)
 
-The CI/CD host is still open (OD-ARCH-03), so none of this is configured:
+T-010 added the CI workflow (`.github/workflows/ci.yml`, see `.github/CI.md`).
+The hosting provider is still open (OD-ARCH-03), so the rest of this is not
+configured:
 
-- The CI job must run `npm run ci` (or the same steps) and be a **required**
-  status check; apply-migrations must run only after it passes
-  (Technical Plan: test -> build image -> apply migrations -> deploy).
+- The workflow's `CI gate` job must be set as a **required** status check;
+  apply-migrations must run only after it passes (Technical Plan: test ->
+  build image -> apply migrations -> deploy). The workflow runs the same
+  steps as `npm run ci`, split into jobs.
 - Branch protection that requires human code review of every migration
   (e.g. review required on `backend/src/**/Persistence/Migrations/**`).
 - Docker available on the CI runner.
