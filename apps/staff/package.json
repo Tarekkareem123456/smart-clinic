@@ -4,9 +4,15 @@
   "version": "0.0.0",
   "description": "Smart Clinic — Staff application surface (foundation skeleton, no functionality yet).",
   "dependencies": {
-    "@smart-clinic/shared": "workspace:*"
+    "@smart-clinic/shared": "0.0.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "typescript": "^5"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
   }
 }

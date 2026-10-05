@@ -23,6 +23,12 @@
     "generate:clients": "npm run generate:clients:staff && npm run generate:clients:portal"
   },
   "devDependencies": {
-    "openapi-typescript": "6.7.6"
-  }
+    "@vitejs/plugin-react": "^6.1.1",
+    "openapi-typescript": "6.7.6",
+    "vite": "^8.3.2"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }
