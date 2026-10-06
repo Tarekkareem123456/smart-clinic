@@ -82,6 +82,8 @@ jobs:
       # In-process tests (T-005/T-006/T-007); no Docker needed.
       - name: Unit tests (SmartClinic.Api.Tests)
         run: dotnet test backend/tests/SmartClinic.Api.Tests -c Release --no-build
+      - name: Unit tests (SmartClinic.Configuration.Tests)
+        run: dotnet test backend/tests/SmartClinic.Configuration.Tests -c Release
 
   backend-integration:
     name: Backend integration tests (Testcontainers)
