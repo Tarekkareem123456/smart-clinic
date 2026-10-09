@@ -120,7 +120,7 @@ public static class LogRedactor
 
     /// <summary>
     /// Scrubs credential-looking material (Bearer/Basic values, JWTs,
-    /// <c>password=...</c> style pairs) from free text, removes control
+    /// sensitive key/value pairs from free text, removes control
     /// characters (log forging) and bounds the length.
     /// </summary>
     public static string RedactText(string? text, int maxLength = MaxValueLength)

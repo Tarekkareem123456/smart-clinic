@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using SmartClinic.Application.Configuration;
 using SmartClinic.Infrastructure.Persistence;
 using Xunit;
 
@@ -89,6 +90,75 @@ public sealed class MigrationsPipelineTests : IClassFixture<PostgresFixture>
             await AssertPermissionDeniedAsync(connectionString, "DROP TABLE \"__EFMigrationsHistory\"");
             await AssertPermissionDeniedAsync(connectionString, "ALTER TABLE \"__EFMigrationsHistory\" ADD COLUMN x int");
         }
+    }
+
+    [Fact]
+    public async Task Audit_table_is_insert_only_for_runtime_and_read_only_for_reports()
+    {
+        var database = await _pg.CreateBaselinedDatabaseAsync();
+        var migrator = _pg.ConnectionStringFor("app_migrator", PostgresFixture.MigratorPassword, database);
+        await MigrationApplier.ApplyAsync(migrator);
+
+        var runtime = _pg.ConnectionStringFor("app_runtime", PostgresFixture.RuntimePassword, database);
+        var reports = _pg.ConnectionStringFor("app_reports", PostgresFixture.ReportsPassword, database);
+
+        Assert.True(await HasPrivilegeAsync(runtime, "INSERT"));
+        Assert.True(await HasPrivilegeAsync(runtime, "SELECT"));
+        Assert.False(await HasPrivilegeAsync(runtime, "UPDATE"));
+        Assert.False(await HasPrivilegeAsync(runtime, "DELETE"));
+        Assert.True(await HasPrivilegeAsync(reports, "SELECT"));
+        Assert.False(await HasPrivilegeAsync(reports, "INSERT"));
+        await AssertPermissionDeniedAsync(runtime, "UPDATE \"AuditLogEntry\" SET \"NewValue\" = 'modified'");
+        await AssertPermissionDeniedAsync(runtime, "DELETE FROM \"AuditLogEntry\"");
+
+        var foreignKeyCount = await QueryStringsAsync(
+            migrator,
+            "SELECT count(*)::text FROM pg_constraint WHERE conrelid = 'public.\"AuditLogEntry\"'::regclass AND contype = 'f'");
+        Assert.Equal("0", Assert.Single(foreignKeyCount));
+
+        var options = new DbContextOptionsBuilder<SmartClinicDbContext>().UseNpgsql(runtime).Options;
+        await using var context = new SmartClinicDbContext(options);
+        Assert.Empty(context.Model.GetEntityTypes().SelectMany(entity => entity.GetForeignKeys()));
+        var writer = new AuditWriter(context);
+        await writer.AppendAuditEntryAsync(
+            "TestEntity",
+            "token-record-42",
+            "password=old-secret",
+            "status=active access_token=new-secret");
+
+        var configurationAuditWriter = new ConfigurationAuditWriter(writer);
+        await configurationAuditWriter.RecordConfigurationChangeAsync(
+            "password",
+            "old-plain-secret",
+            "new-plain-secret");
+
+        Assert.All(context.AuditLogEntries.Local, entry =>
+            Assert.Equal(EntityState.Added, context.Entry(entry).State));
+        await context.SaveChangesAsync();
+
+        var entries = await context.AuditLogEntries.AsNoTracking().OrderBy(entry => entry.Id).ToListAsync();
+        var genericEntry = entries[0];
+        Assert.Equal("TestEntity", genericEntry.EntityType);
+        Assert.Equal("token-record-42", genericEntry.EntityId);
+        Assert.DoesNotContain("old-secret", genericEntry.OldValue);
+        Assert.DoesNotContain("new-secret", genericEntry.NewValue);
+        Assert.Equal("status=active access_token=[REDACTED]", genericEntry.NewValue);
+
+        var configurationEntry = entries[1];
+        Assert.Equal("Configuration", configurationEntry.EntityType);
+        Assert.Equal("password", configurationEntry.EntityId);
+        Assert.Equal("[REDACTED]", configurationEntry.OldValue);
+        Assert.Equal("[REDACTED]", configurationEntry.NewValue);
+    }
+
+    private static async Task<bool> HasPrivilegeAsync(string connectionString, string privilege)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = new NpgsqlCommand(
+            "SELECT has_table_privilege(current_user, '\"AuditLogEntry\"', @privilege)", connection);
+        command.Parameters.AddWithValue("privilege", privilege);
+        return (bool)(await command.ExecuteScalarAsync())!;
     }
 
     [Fact]

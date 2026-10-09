@@ -3,7 +3,7 @@ namespace SmartClinic.Api.Logging;
 /// <summary>
 /// T-007 — what gets handed to <see cref="ILogger"/> instead of the raw
 /// exception, so credential-like text inside exception messages (for
-/// example <c>password=...</c>, Bearer values, JWTs) is never written to a
+/// example sensitive key/value pairs, Bearer values, JWTs) is never written to a
 /// log, whichever provider/formatter is configured.
 ///
 /// Diagnostics are preserved: <see cref="ToString"/> (what console, file and
