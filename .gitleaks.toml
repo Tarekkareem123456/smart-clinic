@@ -5,15 +5,35 @@ title = "Smart Clinic gitleaks configuration"
 [extend]
 useDefault = true
 
-# Narrow, evidence-based allowlist (T-010).
-# The two T-007 redaction tests deliberately use a fabricated JWT-shaped value
-# to prove the log redactor scrubs it. It is synthetic: header {"alg":"HS256"},
-# payload {"sub":"1234567890"} / {"sub":"secret"}, and the signature segment
-# decodes to the word "signature". Allowed ONLY when all three hold: rule
-# "jwt", one of these two test files, and that exact fake signature segment.
+# Existing narrow allowlist: synthetic JWT fixtures in T-007 tests.
 [[allowlists]]
 description = "Synthetic JWT fixtures in the T-007 log-redaction tests"
 condition = "AND"
 targetRules = ["jwt"]
 paths = ['''backend/tests/SmartClinic\.Api\.Tests/(LogRedactorTests|RequestLoggingTests)\.cs''']
 regexes = ['''eyJhbGciOiJIUzI1NiJ9\.eyJ[A-Za-z0-9_-]+\.c2lnbmF0dXJl''']
+
+# T-010: narrowly scoped synthetic fixtures from the original test commit.
+# Requires the exact commit, exact test file, a listed rule, and a matching line.
+[[allowlists]]
+description = "Synthetic redaction fixtures in AuditValueRedactorTests at the original commit"
+condition = "AND"
+commits = ["547c7ddc7ef0b28fcc75039da67d41e51d59b4b5"]
+targetRules = [
+  "private-key",
+  "generic-api-key",
+  "github-pat",
+  "stripe-access-token",
+  "gitlab-pat",
+  "jwt"
+]
+paths = ['''backend/tests/SmartClinic\.Configuration\.Tests/AuditValueRedactorTests\.cs''']
+regexTarget = "line"
+regexes = [
+  '''MIIEsecret''',
+  '''sk_live_51Habc''',
+  '''ghp_123456789012345678901234567890123456''',
+  '''glpat-AbCdEfGhIjKlMnOpQrSt''',
+  '''rk_live_AbCdEfGh1234''',
+  '''eyJhbGciOiJub25lIn0\.eyJzdWIiOiJhZG1pbiJ9\.'''
+]
