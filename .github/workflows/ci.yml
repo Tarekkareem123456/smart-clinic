@@ -58,11 +58,14 @@ jobs:
       # usage + OpenAPI tooling (T-005). Plain Node, no install needed.
       - name: npm run check
         run: npm run check
-      # Typecheck of packages/shared (typescript ^5, as declared in its
-      # package.json). apps/staff and apps/portal are NOT typechecked here:
-      # see "Blocked parts" in .github/CI.md.
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      # Typecheck packages/shared only; apps/staff and apps/portal remain
+      # outside this check as documented in .github/CI.md.
       - name: Typecheck packages/shared
-        run: npx --yes -p typescript@5 tsc -p packages/shared
+        run: npm exec --workspace=@smart-clinic/shared -- tsc -p tsconfig.json
 
   backend-unit:
     name: Backend build + unit tests

@@ -5,6 +5,7 @@
   "description": "Smart Clinic — shared frontend contracts/utilities consumed by apps/staff and apps/portal. Must not depend on either app.",
   "main": "src/index.ts",
   "devDependencies": {
+    "@types/react": "^19.3.0",
     "typescript": "^5"
   },
   "dependencies": {
