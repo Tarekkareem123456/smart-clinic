@@ -30,6 +30,12 @@ public sealed class ConfigurationServiceTests
     }
 
     [Fact]
+    [AuditCoverage(
+        typeof(ConfigurationService),
+        nameof(ConfigurationService.SetAsync),
+        typeof(string),
+        typeof(string),
+        typeof(CancellationToken))]
     public async Task Set_writes_value_and_records_audit_for_non_invariant()
     {
         var registry = new TestRegistry(

@@ -1,5 +1,7 @@
 namespace SmartClinic.Application.Configuration;
 
+using SmartClinic.Application.UseCases;
+
 /// <summary>
 /// Single application path for configuration reads and writes.
 ///
@@ -34,6 +36,7 @@ public sealed class ConfigurationService : IConfigurationService
         _cache = new ConfigurationValueCache();
     }
 
+    [UseCaseOperation(UseCaseOperationKind.ReadOnly)]
     public async Task<string?> GetAsync(
         string key,
         CancellationToken cancellationToken = default)
@@ -56,6 +59,7 @@ public sealed class ConfigurationService : IConfigurationService
         return value;
     }
 
+    [UseCaseOperation(UseCaseOperationKind.Mutating)]
     public async Task SetAsync(
         string key,
         string value,
