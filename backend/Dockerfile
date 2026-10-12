@@ -17,10 +17,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY . .
-RUN dotnet publish src/SmartClinic.Api/SmartClinic.Api.csproj \
-    -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish src/SmartClinic.Api/SmartClinic.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-noble AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 # Official .NET 8 images define APP_UID (non-root); never run as root.
