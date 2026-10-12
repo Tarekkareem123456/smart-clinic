@@ -69,7 +69,7 @@ summary and uploads `ci-timing.json` (artifact `ci-timing`).
 
 | Date | Commit | Pipeline wall-clock (s) | Notes |
 |---|---|---|---|
-| _not yet measured_ | | | The pipeline has not run on the CI host yet. Record the first successful run here. |
+| 2026-10-12 | 4a926e1 | 44 | First successful run; all five jobs succeeded (static 15s, backend 32s, integration 35s, image/Trivy 43s, gitleaks 5s). |
 
 ## Blocked / not covered (see the T-010 report)
 
@@ -83,7 +83,5 @@ summary and uploads `ci-timing.json` (artifact `ci-timing`).
 - **Frontend unit tests.** No frontend test framework has been chosen (same open
   question as T-009), so none is run.
 - **Lint beyond `npm run check`.** No other linter is approved, so none is added.
-- **`npm run check` currently fails** on the existing code (see the T-010 report),
-  so `Static checks` is red until that is resolved.
 - **Image scope.** One API image only (the worker runs in-process, ADR-010; the
   separate-worker note E4 is undecided). Nothing is pushed or deployed.
